@@ -1,6 +1,7 @@
+
 services:
-  main_db:
-    image: postgres:latest
+  main-db:
+    image: postgres
     ports:
       - "5432:5432"
     environment:
@@ -8,7 +9,23 @@ services:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=postgres
     volumes:
-      - main_db:/var/lib/postgresql/data
-
+      - main-db:/var/lib/postgresql/data
+    networks:
+      - app-network
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - app-network
 volumes:
-  main_db:
+  main-db:
+networks:
+  app-network:
+    driver: bridge
