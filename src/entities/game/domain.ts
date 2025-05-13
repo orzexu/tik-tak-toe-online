@@ -58,16 +58,9 @@ export const getGameCurrentSymbol = (
 	return symbols % 2 === 0 ? GameSymbol.X : GameSymbol.O
 }
 
-export const getNextSymbol = (gameSymbol: GameSymbol) => {
-	if (gameSymbol === GameSymbol.X) {
-		return GameSymbol.O
-	}
-	return GameSymbol.X
-}
-
 export const getPlayerSymbol = (
 	player: PlayerEntity,
-	game: GameInProgressEntity
+	game: GameInProgressEntity | GameOverEntity
 ) => {
 	const index = game.players.findIndex(p => p.id === player.id)
 
