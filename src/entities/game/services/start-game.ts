@@ -2,6 +2,7 @@ import { GameId } from '@/kernel/ids'
 import { PlayerEntity } from '../domain'
 import { gameRepository } from '../repositories/game'
 import { left, right } from '@/shared/lib/either'
+import { gameEvents } from '../server'
 
 export async function startGame(gameId: GameId, player: PlayerEntity) {
 	const game = await gameRepository.getGame({ id: gameId })
@@ -10,12 +11,19 @@ export async function startGame(gameId: GameId, player: PlayerEntity) {
 	}
 
 	if (game.status !== 'idle') {
-    return left('game-status-not-idle' as const)
+		return left('game-status-not-idle' as const)
 	}
 
-  if (game.creator.id === player.id) {
-    return left('creator-cant-start-game' as const)
-  }
+	if (game.creator.id === player.id) {
+		return left('creator-cant-start-game' as const)
+	}
 
-  return right(await gameRepository.startGame(gameId, player))
+	const newGame = await gameRepository.startGame(gameId, player)
+
+	await gameEvents.emit({
+		type: 'game-changed',
+		data: newGame,
+	})
+
+	return right(newGame)
 }

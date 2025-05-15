@@ -2,6 +2,7 @@ import cuid from 'cuid'
 import { PlayerEntity } from '../domain'
 import { gameRepository } from '../repositories/game'
 import { left, right } from '@/shared/lib/either'
+import { gameEvents } from '../server'
 
 export async function createGame(player: PlayerEntity) {
 	const playerGames = await gameRepository.gamesList({
@@ -23,6 +24,10 @@ export async function createGame(player: PlayerEntity) {
 		creator: player,
 		status: 'idle',
 	})
+
+  await gameEvents.emit({
+    type: 'game-created'
+  })
 
 	return right(createdGame)
 }

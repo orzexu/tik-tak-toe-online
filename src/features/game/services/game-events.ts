@@ -2,27 +2,43 @@ import { GameDomain } from '@/entities/game'
 import { GameId } from '@/kernel/ids'
 import { EventsChannel } from '@/shared/lib/events'
 
-type GameEvent = {
+type GameChanged = {
 	type: 'game-changed'
 	data: GameDomain.GameEntity
 }
 
-type Listener = (game: GameEvent) => void
+type GameCreated = {
+	type: 'game-created'
+}
+
+type GameEvent = GameChanged | GameCreated
 
 class gameEventsService {
 	eventsChannel = new EventsChannel('game')
 
-	async addListener(gameId: GameId, listener: Listener) {
+	async addGameChangedListener(
+		gameId: GameId,
+		listener: (event: GameChanged) => void
+	) {
 		return this.eventsChannel.consume(gameId, data => {
-			listener(data as GameEvent)
+			listener(data as GameChanged)
 		})
 	}
 
-	emit(game: GameDomain.GameEntity) {
-		return this.eventsChannel.emit(game.id, {
-			type: 'game-changed',
-			data: game,
-		} satisfies GameEvent)
+	async addGamesCreatedListener(listener: (event: GameCreated) => void) {
+		return this.eventsChannel.consume(`game-created`, data => {
+			listener(data as GameCreated)
+		})
+	}
+
+	emit(event: GameEvent) {
+		if (event.type === 'game-changed') {
+			return this.eventsChannel.emit(event.data.id, event)
+		}
+
+    if (event.type === 'game-created') {
+      return this.eventsChannel.emit('game-created', event) 
+    }
 	}
 }
 
